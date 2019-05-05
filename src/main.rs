@@ -309,5 +309,62 @@ fn main() -> ::std::io::Result<()> {
         write_file(&filename, &data)?;
     }
 
+    // output run args
+    println!("args for lock script:");
+    for (i, cell) in input_cells.iter().enumerate() {
+        println!("input {}:", i);
+        println!("command need to run before:");
+        // product current cell for ckb_load_tx
+        println!("rm -f data/cell_0");
+        println!("ln -s `pwd`/data/cell_{}_1 `pwd`/data/cell_0", i);
+        // product current cell for load_cell_by_field
+        for j in 0..7 {
+            println!("rm -f cell_field_0_{}", j);
+            println!(
+                "ln -s `pwd`/data/cell_field_{}_1_{} `pwd`/data/cell_field_0_{}",
+                i, j, j
+            );
+        }
+        // product current cell for load_input_by_field
+        for j in 0..2 {
+            println!("rm -f data/input_field_0_{}", j);
+            println!(
+                "ln -s `pwd`/data/input_field_{}_1_{} `pwd`/data/input_field_0_{}",
+                i, j, j
+            );
+        }
+
+        println!("args:");
+        let mut args = vec![];
+        args.extend_from_slice(&cell.lock.args.as_slice());
+        args.extend_from_slice(&inputs[i].args.as_slice());
+        args.extend_from_slice(&core_tx.witnesses()[i]);
+        for arg in args {
+            for b in arg {
+                print!("{}", b as char);
+            }
+            print!(" ");
+        }
+        println!()
+    }
+
+    println!("args for type script:");
+    for (i, cell) in outputs_cells.iter().enumerate() {
+        println!("output {}:", i);
+        if let Some(ref type_) = cell.type_ {
+            let mut args = vec![];
+            args.extend_from_slice(&type_.args.as_slice());
+            for arg in args {
+                for b in arg {
+                    print!("{}", b as char);
+                }
+                print!(" ");
+            }
+            println!()
+        } else {
+            println!("No type script!");
+        }
+    }
+
     Ok(())
 }
